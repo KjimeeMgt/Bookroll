@@ -5,11 +5,11 @@ import SidebarItem from './SidebarItem';
 
 const items = [
   { id: 'home',      icon: <Home size={20} />,       label: 'Inicio',       path: '/home'            },
-  { id: 'IwRead', icon: <Library size={20} />,    label: 'Quiero leer',  path: '/IwRead' },
-  { id: 'Reading',     icon: <Bookmark size={20} />,   label: 'Leyendo',      path: '/Reading'     },
-  { id: 'leidos',      icon: <ListChecks size={20} />, label: 'Leídos',       path: '/leidos'      },
+  { id: 'IwRead', icon: <Library size={20} />,    label: 'Quiero leer',  path: "/quiero-leer"           },
+  { id: 'Reading',     icon: <Bookmark size={20} />,   label: 'Leyendo',      path: "/leyendo"     },
+  { id: 'leidos',      icon: <ListChecks size={20} />, label: 'Leídos',       path: "/leidos"     },
   { id: 'calendario',  icon: <Calendar size={20} />,   label: 'Calendario',   path: '/calendario'  },
-  { id: 'agregar',     icon: <PlusCircle size={20} />, label: 'Agregar libro',path: '/agregarlibroform'     },
+  { id: 'agregar',     icon: <PlusCircle size={20} />, label: 'Agregar libro',path: "/agregar"    },
 ];
 
 function Sidebar({ expanded = false }) {
