@@ -3,20 +3,19 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OpinionCard from '../componentes/OpinionCard';
 import Button from '../componentes/Button';
+import { api } from '../api';
 
 export default function MisOpiniones() {
   const [opiniones, setOpiniones] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('opiniones')) || [];
-    setOpiniones(stored);
+    api.listOpinions().then(data => setOpiniones(data.items));
   }, []);
 
-  const handleDelete = (id) => {
-    const filtradas = opiniones.filter((o) => o.id !== id);
-    setOpiniones(filtradas);
-    localStorage.setItem('opiniones', JSON.stringify(filtradas));
+  const handleDelete = async (id) => {
+    await api.deleteOpinion(id);
+    setOpiniones(prev => prev.filter(o => o.id !== id));
   };
 
   return (

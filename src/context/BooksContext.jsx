@@ -1,45 +1,67 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { api } from '../api';
 
-const BooksContext = createContext();
+const BooksContext = createContext(null);
 
 export const ETIQUETAS = {
-  QUIERO_LEER: "quiero-leer",
-  LEYENDO: "leyendo",
-  LEIDO: "leidos",
+  QUIERO_LEER: 'quiero-leer',
+  LEYENDO: 'leyendo',
+  LEIDO: 'leidos',
 };
 
 export function BooksProvider({ children }) {
-  const [librosEtiquetados, setLibrosEtiquetados] = useState(() => {
+  const [books, setBooks] = useState([]);
+
+  const fetchAll = useCallback(async () => {
+    if (!localStorage.getItem('access_token')) return;
     try {
-      return JSON.parse(localStorage.getItem("librosEtiquetados")) || {};
+      const data = await api.listBooks();
+      setBooks(data.items);
     } catch {
-      return {};
+      // token expired or network error — leave books empty
     }
-  });
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem("librosEtiquetados", JSON.stringify(librosEtiquetados));
-  }, [librosEtiquetados]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const etiquetar = (libro, etiqueta) => {
-    setLibrosEtiquetados((prev) => {
-      const actual = prev[libro.id];
-      if (actual?.etiqueta === etiqueta) {
-        const nuevo = { ...prev };
-        delete nuevo[libro.id];
-        return nuevo;
-      }
-      return { ...prev, [libro.id]: { ...libro, etiqueta } };
-    });
-  };
+  function getLibrosPor(etiqueta) {
+    return books.filter(b => b.etiqueta === etiqueta);
+  }
 
-  const getEtiqueta  = (libroId) => librosEtiquetados[libroId]?.etiqueta || null;
+  function getEtiqueta(libroId) {
+    return books.find(b => b.id === libroId)?.etiqueta ?? null;
+  }
 
-  const getLibrosPor = (etiqueta) =>
-    Object.values(librosEtiquetados).filter((l) => l.etiqueta === etiqueta);
+  async function etiquetar(libro, etiqueta) {
+    const payload = {
+      titulo:      libro.titulo,
+      autor:       libro.autor,
+      cover:       libro.cover ?? null,
+      frase:       libro.frase ?? null,
+      descripcion: libro.descripcion ?? null,
+      editorial:   libro.editorial ?? null,
+      paginas:     libro.paginas ? String(libro.paginas) : null,
+      rating:      libro.rating ?? null,
+      badge:       libro.badge ?? null,
+      etiqueta,
+    };
+    const created = await api.createBook(payload);
+    setBooks(prev => [...prev, created]);
+  }
+
+  async function deleteBook(id) {
+    await api.deleteBook(id);
+    setBooks(prev => prev.filter(b => b.id !== id));
+  }
+
+  async function updateBook(id, data) {
+    const updated = await api.updateBook(id, data);
+    setBooks(prev => prev.map(b => b.id === id ? updated : b));
+    return updated;
+  }
 
   return (
-    <BooksContext.Provider value={{ etiquetar, getEtiqueta, getLibrosPor }}>
+    <BooksContext.Provider value={{ getLibrosPor, getEtiqueta, etiquetar, deleteBook, updateBook, books, fetchAll }}>
       {children}
     </BooksContext.Provider>
   );

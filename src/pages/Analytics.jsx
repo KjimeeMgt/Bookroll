@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react';
 import Sidebar from '../componentes/sidebar';
-import { useBooks } from '../context/BooksContext';
+import { api } from '../api';
 import { BarChart2, BookOpen, BookMarked, CheckCheck, Star, TrendingUp } from 'lucide-react';
- 
+
 function StatCard({ icon: Icon, label, value, color }) {
   return (
     <div className="bg-[#1c0e0e] border border-[#3d2020] rounded-2xl p-5 flex items-center gap-4">
@@ -16,7 +17,7 @@ function StatCard({ icon: Icon, label, value, color }) {
     </div>
   );
 }
- 
+
 function BarItem({ label, count, max, color }) {
   const pct = max === 0 ? 0 : Math.round((count / max) * 100);
   return (
@@ -30,7 +31,7 @@ function BarItem({ label, count, max, color }) {
     </div>
   );
 }
- 
+
 function RatingBar({ stars, count, max }) {
   const pct = max === 0 ? 0 : Math.round((count / max) * 100);
   return (
@@ -44,45 +45,34 @@ function RatingBar({ stars, count, max }) {
     </div>
   );
 }
- 
+
 export default function Analytics() {
-  const { getLibrosPor } = useBooks();
- 
-  const leidos     = getLibrosPor('leidos');
-  const leyendo    = getLibrosPor('leyendo');
-  const quieroLeer = getLibrosPor('quiero-leer');
-  const todos      = [...leidos, ...leyendo, ...quieroLeer];
- 
-  // Promedio de rating
-  const conRating  = leidos.filter(l => l.rating > 0);
-  const promedioRating = conRating.length
-    ? (conRating.reduce((s, l) => s + l.rating, 0) / conRating.length).toFixed(1)
-    : '—';
- 
-  // Distribución de ratings
-  const ratingDist = [5, 4, 3, 2, 1].map(n => ({
-    stars: n,
-    count: leidos.filter(l => l.rating === n).length,
-  }));
-  const maxRating = Math.max(...ratingDist.map(r => r.count), 1);
- 
-  // Top autores
-  const autoresCont = {};
-  todos.forEach(l => {
-    if (l.autor) autoresCont[l.autor] = (autoresCont[l.autor] || 0) + 1;
-  });
-  const topAutores = Object.entries(autoresCont)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-  const maxAutor = topAutores[0]?.[1] || 1;
- 
-  // Páginas totales
-  const paginasTotales = leidos.reduce((s, l) => s + (parseInt(l.paginas) || 0), 0);
- 
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    api.getAnalytics().then(setStats);
+  }, []);
+
+  if (!stats) {
+    return (
+      <div className="flex h-screen bg-[#12060f] overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-[#a08070]">Cargando...</p>
+        </main>
+      </div>
+    );
+  }
+
+  const ratingDist = stats.rating_distribucion;
+  const maxRating  = Math.max(...ratingDist.map(r => r.count), 1);
+  const topAutores = stats.top_autores.map(a => [a.autor, a.count]);
+  const maxAutor   = stats.top_autores[0]?.count || 1;
+
   return (
     <div className="flex h-screen bg-[#12060f] overflow-hidden">
       <Sidebar />
- 
+
       <main className="flex-1 overflow-y-auto px-8 py-6">
         {/* Encabezado */}
         <div className="flex items-center gap-3 mb-8">
@@ -94,32 +84,32 @@ export default function Analytics() {
             <p className="text-[#a08070] text-sm">Tu actividad lectora</p>
           </div>
         </div>
- 
+
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={CheckCheck}  label="Leídos"       value={leidos.length}     color="#6B2737" />
-          <StatCard icon={BookOpen}    label="Leyendo"      value={leyendo.length}    color="#3d5a80" />
-          <StatCard icon={BookMarked}  label="Pendientes"   value={quieroLeer.length} color="#5a3d20" />
-          <StatCard icon={TrendingUp}  label="En total"     value={todos.length}      color="#4a6741" />
+          <StatCard icon={CheckCheck}  label="Leídos"     value={stats.leidos}      color="#6B2737" />
+          <StatCard icon={BookOpen}    label="Leyendo"    value={stats.leyendo}     color="#3d5a80" />
+          <StatCard icon={BookMarked}  label="Pendientes" value={stats.quiero_leer} color="#5a3d20" />
+          <StatCard icon={TrendingUp}  label="En total"   value={stats.total}       color="#4a6741" />
         </div>
- 
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           {/* Promedio rating */}
           <div className="bg-[#1c0e0e] border border-[#3d2020] rounded-2xl p-5 flex flex-col items-center justify-center gap-1">
             <Star size={20} className="text-[#d4a574] mb-1" />
-            <p className="text-[#f0e0c8] text-5xl font-serif">{promedioRating}</p>
+            <p className="text-[#f0e0c8] text-5xl font-serif">{stats.promedio_rating ?? '—'}</p>
             <p className="text-[#a08070] text-xs uppercase tracking-widest">Rating promedio</p>
           </div>
- 
+
           {/* Páginas */}
           <div className="bg-[#1c0e0e] border border-[#3d2020] rounded-2xl p-5 flex flex-col items-center justify-center gap-1">
             <BookOpen size={20} className="text-[#6B2737] mb-1" />
             <p className="text-[#f0e0c8] text-5xl font-serif">
-              {paginasTotales > 0 ? paginasTotales.toLocaleString() : '—'}
+              {stats.paginas_totales > 0 ? stats.paginas_totales.toLocaleString() : '—'}
             </p>
             <p className="text-[#a08070] text-xs uppercase tracking-widest">Páginas leídas</p>
           </div>
- 
+
           {/* Distribución ratings */}
           <div className="bg-[#1c0e0e] border border-[#3d2020] rounded-2xl p-5">
             <p className="text-[#d4a574] text-[10px] uppercase tracking-widest font-bold mb-4">
@@ -132,7 +122,7 @@ export default function Analytics() {
             </div>
           </div>
         </div>
- 
+
         {/* Top autores */}
         {topAutores.length > 0 && (
           <div className="bg-[#1c0e0e] border border-[#3d2020] rounded-2xl p-5">
@@ -146,9 +136,9 @@ export default function Analytics() {
             </div>
           </div>
         )}
- 
+
         {/* Estado vacío */}
-        {todos.length === 0 && (
+        {stats.total === 0 && (
           <div className="flex flex-col items-center justify-center h-48 gap-3 text-center">
             <BarChart2 size={36} className="text-[#3d2020]" />
             <p className="text-[#a08070] text-sm max-w-xs">

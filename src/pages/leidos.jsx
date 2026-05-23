@@ -4,6 +4,7 @@ import SearchBar from "../componentes/searchbar";
 import CategoryRow from "../componentes/categoryrow";
 import SectionHeader from "../componentes/sectionhader";
 import BookCard from "../componentes/bookcard";
+import { useBooks } from "../context/BooksContext";
 
 const CATEGORIAS = [
   "Todos",
@@ -15,30 +16,17 @@ const CATEGORIAS = [
   "Biografía",
 ];
 
-const LIBROS_POPULARES = [
-  { id: 1, titulo: "El nombre del viento",   autor: "P. Rothfuss",      rating: 5, badge: "POPULAR" },
-  { id: 2, titulo: "Cien años de soledad",   autor: "G. García Márquez",rating: 4, badge: null },
-  { id: 3, titulo: "Pedro Páramo",           autor: "J. Rulfo",         rating: 4, badge: "NUEVO" },
-  { id: 4, titulo: "La sombra del viento",   autor: "C. Ruiz Zafón",    rating: 4, badge: null },
-  { id: 5, titulo: "Rayuela",                autor: "J. Cortázar",      rating: 3, badge: null },
-  { id: 6, titulo: "Aura",                   autor: "C. Fuentes",       rating: 5, badge: null },
-];
-
-const RECOMENDADOS = [
-  { id: 7,  titulo: "Ficciones",                 autor: "J. L. Borges",  rating: 5, badge: null },
-  { id: 8,  titulo: "El túnel",                  autor: "E. Sábato",     rating: 4, badge: null },
-  { id: 9,  titulo: "Como agua para chocolate",  autor: "L. Esquivel",   rating: 4, badge: "NUEVO" },
-  { id: 10, titulo: "Los de abajo",              autor: "M. Azuela",     rating: 3, badge: null },
-];
-
 const VISIBLE = 6;
 
 export default function Leidos() {
+  const { getLibrosPor } = useBooks();
   const [categoriaActiva, setCategoriaActiva] = useState("Todos");
   const [busqueda, setBusqueda]               = useState("");
   const [indice, setIndice]                   = useState(0);
 
-  const librosFiltrados = LIBROS_POPULARES.filter((libro) => {
+  const libros = getLibrosPor('leidos');
+
+  const librosFiltrados = libros.filter((libro) => {
     const matchBusqueda =
       libro.titulo.toLowerCase().includes(busqueda.toLowerCase()) ||
       libro.autor.toLowerCase().includes(busqueda.toLowerCase());
@@ -75,40 +63,29 @@ export default function Leidos() {
           onCategoryClick={setCategoriaActiva}
         />
 
-        {/* Popular esta semana */}
+        {/* Leídos */}
         <section>
           <SectionHeader
-            title="Popular esta semana"
+            title="Leídos"
             onPrev={handlePrev}
             onNext={handleNext}
           />
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-            {visibles.map((libro) => (
-              <BookCard
-                key={libro.id}
-                titulo={libro.titulo}
-                autor={libro.autor}
-                rating={libro.rating}
-                badge={libro.badge}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Recomendados para ti */}
-        <section>
-          <SectionHeader title="Recomendados para ti" showArrows={false} />
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-            {RECOMENDADOS.map((libro) => (
-              <BookCard
-                key={libro.id}
-                titulo={libro.titulo}
-                autor={libro.autor}
-                rating={libro.rating}
-                badge={libro.badge}
-              />
-            ))}
-          </div>
+          {librosFiltrados.length === 0 ? (
+            <p className="text-[#a08070] text-sm mt-4">No hay libros en esta lista aún.</p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+              {visibles.map((libro) => (
+                <BookCard
+                  key={libro.id}
+                  titulo={libro.titulo}
+                  autor={libro.autor}
+                  rating={libro.rating}
+                  badge={libro.badge}
+                  cover={libro.cover}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
       </main>

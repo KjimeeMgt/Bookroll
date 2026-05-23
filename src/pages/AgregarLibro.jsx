@@ -14,9 +14,8 @@ export default function AgregarLibro() {
   const [libroGuardado, setLibroGuardado] = useState(null); // libro recién creado
   const [infobookOpen, setInfobookOpen]   = useState(false); // modal de detalle
 
-  const handleSubmit = (datos) => {
+  const handleSubmit = async (datos) => {
     const nuevoLibro = {
-      id:          `libro-${Date.now()}`,
       titulo:      datos.titulo,
       autor:       datos.autor,
       cover:       datos.cover  || null,
@@ -28,8 +27,8 @@ export default function AgregarLibro() {
       badge:       null,
     };
 
-    // Guardar en el contexto con la etiqueta elegida
-    etiquetar(nuevoLibro, datos.etiqueta);
+    // Guardar en el contexto con la etiqueta elegida (async, server assigns id)
+    await etiquetar(nuevoLibro, datos.etiqueta);
 
     // Mostrar infobook para confirmar
     setLibroGuardado({ ...nuevoLibro, etiqueta: datos.etiqueta });
