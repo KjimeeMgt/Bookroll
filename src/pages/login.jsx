@@ -1,31 +1,34 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { api, saveSession } from "../api";
 
 function SignIn() {
-    const [formData, setFormData] = useState({
-        username: '',
-        password: ''
-    });
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Datos enviados:", formData);
-        alert("Sesión iniciada (simulada)");
+        setError('');
+        try {
+            const tokens = await api.login({ email: formData.email, password: formData.password });
+            saveSession(tokens);
+            navigate('/home');
+        } catch (err) {
+            setError(err.message);
+        }
     };
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center p-4 overflow-hidden">
-            
+
             <div className="fixed inset-0 w-full h-full z-0">
-                <img 
-                    src="/signinimg.png" 
+                <img
+                    src="/signinimg.png"
                     alt="background"
                     className="w-full h-full object-cover blur-2xl scale-110"
                 />
@@ -50,20 +53,24 @@ function SignIn() {
                 </div>
 
                 <div className="relative w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center z-10 bg-[#baa470] text-[#3d2b1f]">
-                    
+
                    <h2 className="text-4xl font-serif mb-8 text-center md:text-left text-[#5c4033] tracking-tight">Sign In</h2>
                     <p className="text-sm text-[#4e4039] mb-6 text-center md:text-left">
                         Inicia Sesión con tu cuenta de lector
                     </p>
 
+                    {error && (
+                        <p className="text-red-700 bg-red-100 rounded-lg px-4 py-2 text-sm mb-4">{error}</p>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
                         <div>
-                            <label className="block text-xs uppercase tracking-[0.2em] mb-2 text-[#554839] font-bold">Username</label>
+                            <label className="block text-xs uppercase tracking-[0.2em] mb-2 text-[#554839] font-bold">Email</label>
                             <input
-                                type="text"
-                                name="username"
-                                value={formData.username}
-                                placeholder="Tu nombre de usuario o email"
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                placeholder="tu@email.com"
                                 className="w-full bg-transparent border-b border-[#8c6d46]/40 py-2 focus:outline-none focus:border-[#5c4033] transition-colors placeholder:text-[#8c6d46]/50 text-lg"
                                 onChange={handleChange}
                                 required
@@ -90,11 +97,11 @@ function SignIn() {
                             Iniciar Sesión
                         </button>
                     </form>
-                    
+
                     <div className="mt-12 text-sm text-center md:text-left text-[#8c6d46]">
                         <Link to="/signup" className="text-[#5c4033] hover:text-[#3d2b1f] underline underline-offset-4 transition-colors">
                             ¿Nuevo? Crea una cuenta
-                        </Link>               
+                        </Link>
                      </div>
                 </div>
             </div>

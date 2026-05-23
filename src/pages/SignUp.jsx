@@ -1,30 +1,41 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { api, saveSession } from "../api";
 
 function SignUp() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: '', email: '', password: '', confirmPassword: ''
     });
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         if (formData.password !== formData.confirmPassword) {
-            alert("Las contraseñas no coinciden");
+            setError("Las contraseñas no coinciden");
             return;
         }
-        alert("Registro exitoso");
+        try {
+            await api.register({ username: formData.username, email: formData.email, password: formData.password });
+            const tokens = await api.login({ email: formData.email, password: formData.password });
+            saveSession(tokens);
+            navigate('/home');
+        } catch (err) {
+            setError(err.message);
+        }
     };
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center p-4 overflow-hidden">
-            
+
             <div className="fixed inset-0 w-full h-full z-0">
-                <img 
-                    src="/signupimg.png" 
+                <img
+                    src="/signupimg.png"
                     alt="background"
                     className="w-full h-full object-cover blur-2xl scale-110"
                 />
@@ -37,6 +48,10 @@ function SignUp() {
                     <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-md -z-10"></div>
 
                     <h2 className="text-4xl font-serif mb-8 text-yellow-100 text-center md:text-left">Sign Up</h2>
+
+                    {error && (
+                        <p className="text-red-300 bg-red-900/30 rounded-lg px-4 py-2 text-sm mb-4">{error}</p>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
@@ -96,7 +111,7 @@ function SignUp() {
                     <div className="mt-12 text-sm text-center md:text-left text-[#8c6d46]">
                         <Link to="/signin" className="text-yellow-200 hover:text-[#3d2b1f] underline underline-offset-4 transition-colors">
                             ¿Ya tienes cuenta? Inicia sesión
-                        </Link>               
+                        </Link>
                      </div>
                 </div>
 
