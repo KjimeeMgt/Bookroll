@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function SignUp() {
     const [formData, setFormData] = useState({
@@ -92,9 +93,11 @@ function SignUp() {
                         </button>
                     </form>
 
-                    <button className="mt-8 text-sm text-yellow-200/60 hover:text-yellow-200 underline underline-offset-4 mx-auto md:mx-0">
-                        ¿Ya tienes cuenta?
-                    </button>
+                    <div className="mt-12 text-sm text-center md:text-left text-[#8c6d46]">
+                        <Link to="/signin" className="text-yellow-200 hover:text-[#3d2b1f] underline underline-offset-4 transition-colors">
+                            ¿Ya tienes cuenta? Inicia sesión
+                        </Link>               
+                     </div>
                 </div>
 
                 <div className="hidden md:block w-1/2 relative overflow-hidden">

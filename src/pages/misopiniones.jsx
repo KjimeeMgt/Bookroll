@@ -1,9 +1,12 @@
 // src/pages/misOpiniones.jsx
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import OpinionCard from '../componentes/OpinionCard';
+import Button from '../componentes/Button';
 
 export default function MisOpiniones() {
   const [opiniones, setOpiniones] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('opiniones')) || [];
@@ -40,6 +43,10 @@ export default function MisOpiniones() {
           ))}
         </div>
       )}
+
+      <Button variant="primary" className="mt-10" onClick={() => navigate('/home')}>
+        Volver a la página principal
+      </Button>
     </div>
   );
 }
